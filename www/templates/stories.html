@@ -1,0 +1,17 @@
+<ion-view view-title="Stories">
+    <ion-content>
+        <ion-list>
+            <ion-item ng-repeat="story in storyList" ng-click="clickStory(story)">
+
+
+
+                <a class="item item-thumbnail-left" >
+                    <img src="img/ionic.png">
+                    <h2>{{story.name}}</h2>
+                    <h2>{{story.age}}</h2>
+                    <p>{{story.story}}</p>
+                </a>
+            </ion-item>
+        </ion-list>
+    </ion-content>
+</ion-view>
