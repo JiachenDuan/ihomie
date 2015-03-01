@@ -4,26 +4,38 @@ var PaypalSecret = "EJha7cYA-_t_Od--8lHe9XLiSf1bOqreT7_1OyfmTdWFOw55LiBRttIBv57a
 
 var GetAccessToken = function() {
   var auth = Base64.encode(PaypalClientId + ":" + PaypalSecret);
-  var Token = $resource(PaypalApiUrl + "/v1/oauth2/token:grant_type", {}, {
-    get: {headers: {"Authorization": "Basic " + auth}},
+  var Token = $resource(PaypalApiUrl + "/v1/oauth2/token:grant_type", {
+    "grant_type": "client_credentials",
+  }, {
+    post: {
+      headers: {
+        "Authorization": "Basic " + auth,
+        "Accept": "application/json",
+        "Accept-Language": "en_US",
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      isArray: false,
+    },
   });
-  return Token.get({grant_type: "client_credentials"}).$promise;
+  return Token.post().$promise;
 }
 
 var Payment = function(amount, succeedUrl, cancelUrl, onError) {
   getAccessToken().then(function(token) {
     var Payment = $resource(PaypalApiUrl + "/v1/payments/payment", {}, {
       post: {
-        headers: {"Authorization": token.token_type + " " + token.access_token}
-        params: {
-          intent: "sale",
-          payer: {payment_method: "paypal"},
-          redirect_urls: {return_url: succeedUrl, cancel_url: cancelUrl},
+        headers: {
+          "Authorization": token.token_type + " " + token.access_token,
+          "Content-Type": "application/json",
         },
+        isArray: false,
       },
     });
     Payment.post({
-      transaction: [{amount: {total: amount, currency: "USD"}, description: "Donation to homeless"}],
+      "intent": "sale",
+      "payer": {"payment_method": "paypal"},
+      "redirect_urls": {"return_url": succeedUrl, "cancel_url": cancelUrl},
+      "transactions": [{"amount": {"total": amount, "currency": "USD"}, "description": "Donation to homeless"}],
     }).$promise.then(function(payment) {
       for (var i = 0; i < payment.links.length; i++) {
         if (payment.links[i].rel == "approval_url") {
