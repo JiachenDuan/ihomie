@@ -4,24 +4,32 @@ var PaypalSecret = "EJha7cYA-_t_Od--8lHe9XLiSf1bOqreT7_1OyfmTdWFOw55LiBRttIBv57a
 
 var GetAccessToken = function() {
   var auth = Base64.encode(PaypalClientId + ":" + PaypalSecret);
-  var Token = $resource(PaypalApiUrl + "/v1/oauth2/token:grant_type", {}, {
-    post: {headers: {
-      "Authorization": "Basic " + auth,
-      "Accept": "application/json",
-      "Accept-Language": "en_US",
-      "Content-Type": "application/x-www-form-urlencoded",
-    }},
+  var Token = $resource(PaypalApiUrl + "/v1/oauth2/token:grant_type", {
+    "grant_type": "client_credentials",
+  }, {
+    post: {
+      headers: {
+        "Authorization": "Basic " + auth,
+        "Accept": "application/json",
+        "Accept-Language": "en_US",
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      isArray: false,
+    },
   });
-  return Token.post({"grant_type": "client_credentials"}).$promise;
+  return Token.post().$promise;
 }
 
 var Payment = function(amount, succeedUrl, cancelUrl, onError) {
   getAccessToken().then(function(token) {
     var Payment = $resource(PaypalApiUrl + "/v1/payments/payment", {}, {
-      post: {headers: {
-        "Authorization": token.token_type + " " + token.access_token,
-        "Content-Type": "application/json",
-      }},
+      post: {
+        headers: {
+          "Authorization": token.token_type + " " + token.access_token,
+          "Content-Type": "application/json",
+        },
+        isArray: false,
+      },
     });
     Payment.post({
       "intent": "sale",
